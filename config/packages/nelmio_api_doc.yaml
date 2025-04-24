@@ -1,0 +1,9 @@
+nelmio_api_doc:
+    documentation:
+        info:
+            title: Ledger Service API
+            description: Multi-currency ledger API documentation
+            version: 1.0.0
+    areas:
+        default:
+            path_patterns: [ ^/api ] # or more specific like ^/api/

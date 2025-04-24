@@ -1,0 +1,18 @@
+monolog:
+  handlers:
+    main:
+      type: stream
+      path: '%kernel.logs_dir%/%kernel.environment%.log'
+      level: debug
+      channels: [ "!event" ]
+
+    messenger:
+      type: stream
+      path: '%kernel.logs_dir%/messenger.log'
+      level: debug
+      channels: [ "messenger" ]
+
+    console:
+      type: console
+      process_psr_3_messages: true
+      channels: [ "!event", "!doctrine" ]

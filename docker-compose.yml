@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    container_name: ledger-app
+    volumes:
+      - .:/app:delegated
+      - ./var:/app/var
+    ports:
+      - 8000:8000
+    depends_on:
+      - db
+      - rabbitmq
+      - redis
+    environment:
+      APP_ENV: dev
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      MESSENGER_TRANSPORT_DSN: amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASS}@rabbitmq:5672/%2f
+      REDIS_URL: redis://redis:6379
+
+  db:
+    image: postgres:15
+    container_name: ledger-db
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: ledger-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+
+  redis:
+    image: redis:7-alpine
+    container_name: ledger-redis
+    ports:
+      - "6379:6379"
+
+  messenger-worker:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    container_name: ledger-worker
+    command: php bin/console messenger:consume async --memory-limit=128M --time-limit=3600
+    restart: always
+    depends_on:
+      - rabbitmq
+      - db
+      - redis
+      - app
+    volumes:
+      - .:/app
+    environment:
+      APP_ENV: dev
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      MESSENGER_TRANSPORT_DSN: amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASS}@rabbitmq:5672/%2f
+
+volumes:
+  db_data:
