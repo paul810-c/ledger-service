@@ -133,6 +133,7 @@ Configured using Symfony's native security system.
 
 ## Improvements and TODOs
 
+- add stress testing scripts using Artillery / Locust
 - Add code quality tools (phpstan, psalm, php-cs-fixer, php-codesniffer)
 - Add JWT-based auth option
 - Add rate limiting (API rate throttling)
